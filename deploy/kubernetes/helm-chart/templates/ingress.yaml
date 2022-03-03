@@ -1,34 +1,73 @@
+{{- $fullName := include "fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+{{- $ingressPathType := .Values.ingress.pathType -}}
+{{- $newAPI := .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" -}}
+{{- if $newAPI -}}
 apiVersion: networking.k8s.io/v1
+{{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1/Ingress" }}
+apiVersion: networking.k8s.io/v1beta1
+{{- else }}
+apiVersion: extensions/v1beta1
+{{- end }}
 kind: Ingress
 metadata:
-  {{- if .Values.ingress.annotations }}
-  annotations:
-  {{ toYaml .Values.ingress.annotations | indent 4 }}
-  {{- end }}
-  {{- if .Values.ingress.labels }}
+  name: {{ $fullName }}
+  {{- with .Values.ingress.labels }}
   labels:
-  {{ toYaml .Values.ingress.labels | indent 4 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
-  name: {{ template "fullname" .}}-socks-ingress
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  rules:
-  - http:
-      paths:
-      - backend:
-          service:
-            name: front-end
-            port:
-              number: 80
-        path: /
-        pathType: Prefix
-    {{- if .Values.ingress.host }}
-    host: {{ .Values.ingress.host }}
-    {{- end }}
-  {{- if .Values.ingress.tlsSecretName }}
+  {{- if .Values.ingress.tls }}
   tls:
-  - secretName: {{ .Values.ingress.tlsSecretName }}
-    {{- if .Values.ingress.host }}
-    hosts:
-    - {{ .Values.ingress.host }}
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
     {{- end }}
   {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ . }}
+            {{- if $newAPI }}
+            pathType: {{ $ingressPathType }}
+            {{- end }}
+            backend:
+              {{- if $newAPI }}
+              service:
+                name: front-end
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: front-end
+              servicePort: {{ $svcPort }}
+              {{- end }}
+          {{- end }}
+    {{- end }}
+    {{- range .Values.ingress.paths }}
+    - http:
+        paths:
+          - path: {{ . }}
+            {{- if $newAPI }}
+            pathType: {{ $ingressPathType }}
+            {{- end }}
+            backend:
+              {{- if $newAPI }}
+              service:
+                name: front-end
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: front-end
+              servicePort: {{ $svcPort }}
+              {{- end }}
+    {{- end }}
