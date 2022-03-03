@@ -135,3 +135,5 @@ output-virtualbox-iso
 # helm
 charts/
 Chart.lock
+values-mywork.yaml
+secrets.yaml
