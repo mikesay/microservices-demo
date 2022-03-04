@@ -87,7 +87,7 @@ catalogue:
 frontend:
     replicas: 1
     image:
-        repo: weaveworksdemos/front-end
+        repo: mikejianzhang/front-end
         tag: 0.3.12
     resources:
         limits:
