@@ -1,0 +1,75 @@
+{{- if .Values.zipkin.enabled -}}
+{{- $fullName := include "fullname" . -}}
+{{- $svcPort := .Values.zipkin.service.port -}}
+{{- $ingressPathType := .Values.zipkin.ingress.pathType -}}
+{{- $newAPI := .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" -}}
+{{- if $newAPI -}}
+apiVersion: networking.k8s.io/v1
+{{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1/Ingress" }}
+apiVersion: networking.k8s.io/v1beta1
+{{- else }}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-zipkin
+  {{- with .Values.zipkin.ingress.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.zipkin.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.zipkin.ingress.tls }}
+  tls:
+    {{- range .Values.zipkin.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.zipkin.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ . }}
+            {{- if $newAPI }}
+            pathType: {{ $ingressPathType }}
+            {{- end }}
+            backend:
+              {{- if $newAPI }}
+              service:
+                name: zipkin
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: zipkin
+              servicePort: {{ $svcPort }}
+              {{- end }}
+          {{- end }}
+    {{- end }}
+    {{- range .Values.zipkin.ingress.paths }}
+    - http:
+        paths:
+          - path: {{ . }}
+            {{- if $newAPI }}
+            pathType: {{ $ingressPathType }}
+            {{- end }}
+            backend:
+              {{- if $newAPI }}
+              service:
+                name: zipkin
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: zipkin
+              servicePort: {{ $svcPort }}
+              {{- end }}
+    {{- end }}
+{{- end -}}

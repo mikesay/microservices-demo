@@ -25,7 +25,7 @@ ingress:
   tls:
     - hosts:
         - sockshop.mikesay.com
-      secretName: sockshop-mikesay-com-secret
+      secretName: mikesay-com-secret
   hosts:
     - host: sockshop.mikesay.com
       paths:
@@ -253,8 +253,26 @@ zipkin:
         requests:
             cpu: 100m
             memory: 300Mi
-    enabled:  false
+    enabled:  true
     url: zipkin.zipkin.svc.cluster.local
+
+    service:
+      type: ClusterIP
+      port: 9411
+
+    ingress:
+      pathType: Prefix
+      annotations:
+        kubernetes.io/ingress.class: nginx
+      labels: {}
+      tls:
+        - hosts:
+            - zipkin.mikesay.com
+          secretName: mikesay-com-secret
+      hosts:
+        - host: zipkin.mikesay.com
+          paths:
+            - /
 
 zipkinmysql:
     image:
