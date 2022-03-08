@@ -254,7 +254,7 @@ zipkin:
             cpu: 100m
             memory: 300Mi
     enabled:  true
-    url: zipkin.zipkin.svc.cluster.local
+    url: zipkin
 
     service:
       type: ClusterIP
