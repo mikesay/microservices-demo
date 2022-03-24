@@ -25,6 +25,10 @@ spec:
           value: mysql
         - name: MYSQL_HOST
           value: zipkin-mysql
+        - name: MYSQL_USER
+          value: zipkin
+        - name: MYSQL_PASS
+          value: zipkin
         resources:
 {{ toYaml .Values.zipkin.resources | indent 10 }}
 {{- end -}}

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: mse
+  name: sockshop-mse
+  namespace: sockshop
+spec:
+  rules:
+  - host: sockshop-mse.ingka-dt.cn
+    http:
+      paths:
+      - backend:
+          serviceName: front-end
+          servicePort: 80
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - sockshop-mse.ingka-dt.cn
+    secretName: ingka-dt-cn-tls
